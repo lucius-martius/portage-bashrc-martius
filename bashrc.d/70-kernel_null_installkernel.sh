@@ -7,7 +7,7 @@ exit 0
 EOF
 
 Kernel_NullInstall_Install() {
-  cat <<< ${INSTALLKERNEL_SCRIPT} > "${S}/installkernel"
+  cat <<< "${INSTALLKERNEL_SCRIPT}" > "${S}/installkernel"
 
   elog "===================================="
   elog "Replaced installkernel script with a noop script"

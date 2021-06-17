@@ -21,18 +21,18 @@ Kernel_Initramfs_CollectLibs() {
 
   #resolve linked libaries
   to_resolve=("${out_list[@]}")
-  while [[ -n ${to_resolve} ]]; do
+  while [[ -n ${to_resolve[0]} ]]; do
     #pop front of list
     cur_item="${to_resolve[0]}"
-    unset to_resolve[0]
+    unset "to_resolve[0]"
     to_resolve=("${to_resolve[@]}")
 
     #parse ldd output
-    while LFS= read -r line; do
+    while LFS="" read -r line; do
       if [[ ${line} =~ ${REGEX1} || ${line} =~ ${REGEX2} ]]; then
         local new_bin=true
         for bin in "${out_list[@]}"; do
-          if [[ ${bin} = ${BASH_REMATCH[1]} ]]; then
+          if [[ ${bin} = "${BASH_REMATCH[1]}" ]]; then
             new_bin=false
           fi
         done
@@ -41,10 +41,10 @@ Kernel_Initramfs_CollectLibs() {
           out_list+=("${BASH_REMATCH[1]}")
         fi
       fi
-    done <<< $(ldd "${cur_item}" || die)
+    done <<< "$(ldd "${cur_item}" || die)"
   done
 
-  echo ${out_list[@]}
+  echo "${out_list[@]}"
 }
 
 Kernel_Initramfs_Prepare() {
@@ -98,7 +98,7 @@ Kernel_Initramfs_Prepare() {
 
   Kernel_Initramfs_CollectLibs bin_list bin_list || die
 
-  for f in ${bin_list[@]}; do
+  for f in "${bin_list[@]}"; do
     echo "file ${f} ${f} 0755 0 0" >> "${file_list}"
   done
 

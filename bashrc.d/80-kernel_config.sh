@@ -13,6 +13,7 @@ Kernel_Config_Compile(){
   sed -i -e "${sed_cmd}" "${WORKDIR}/build/.config" || die
 
   #reflect the fixed localversion
+  #shellcheck disable=SC2034
   KV_LOCALVERSION="-${PN%-kernel}"
 
   #TODO: Add microcode setting

@@ -6,7 +6,7 @@ Kernel_ZfsBuiltin_Unpack() {
   local global_distdir
   global_distdir="/var/cache/distfiles"
   einfo "Integrating ZFS Version ${ZFS_VERSION}"
-  unpack "${global_distdir}/zfs-${ZFS_VERSION}.tar.gz"
+  tar -xf "${global_distdir}/zfs-${ZFS_VERSION}.tar.gz" -C "${WORKDIR}" || die
 }
 
 Kernel_ZfsBuiltin_Configure() {
@@ -23,7 +23,7 @@ Kernel_ZfsBuiltin_Configure() {
 
   emake ARCH="${kern_arch}" O="${WORKDIR}/prepare" -C "${S}" defconfig || die
   emake ARCH="${kern_arch}" O="${WORKDIR}/prepare" -C "${S}" prepare || die
-  cd "$HOME/zfs-${ZFS_VERSION}" || die
+  cd "${WORKDIR}/zfs-${ZFS_VERSION}" || die
 
   einfo "Configuring ZFS"
   local zfs_config_opts=(
