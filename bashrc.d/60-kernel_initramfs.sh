@@ -53,21 +53,17 @@ Kernel_Initramfs_Prepare() {
   mkdir -p "${initrd_dir}" || die
   touch "${file_list}" || die
 
-  local intel_microcode_dir="/lib/firmware/intel-ucode"
-  if [ -e "${intel_microcode_dir}" ]; then
-    cat "${intel_microcode_dir}"/* > "${initrd_dir}/GenuineIntel.bin"
-    echo "file /kernel/x86/microcode/GenuineIntel.bin ${initrd_dir}/GenuineIntel.bin 0644 0 0" >> "${file_list}"
-  fi
-
-  echo "dir /dev 0755 0 0"  >> "${file_list}"
-  echo "nod /dev/console 0622 0 0 c 5 1" >> "${file_list}"
-  echo "nod /dev/null    0622 0 0 c 1 3" >> "${file_list}"
-  echo "nod /dev/tty     0622 0 0 c 5 0" >> "${file_list}"
-  echo "nod /dev/tty0    0622 0 0 c 4 0" >> "${file_list}"
-  echo "nod /dev/tty1    0622 0 0 c 4 1" >> "${file_list}"
-  echo "nod /dev/urandom 0622 0 0 c 1 9" >> "${file_list}"
-  echo "nod /dev/random  0622 0 0 c 1 8" >> "${file_list}"
-  echo "nod /dev/zero    0622 0 0 c 1 5" >> "${file_list}"
+  {
+      echo "dir /dev 0755 0 0"
+      echo "nod /dev/console 0622 0 0 c 5 1"
+      echo "nod /dev/null    0622 0 0 c 1 3"
+      echo "nod /dev/tty     0622 0 0 c 5 0"
+      echo "nod /dev/tty0    0622 0 0 c 4 0"
+      echo "nod /dev/tty1    0622 0 0 c 4 1"
+      echo "nod /dev/urandom 0622 0 0 c 1 9"
+      echo "nod /dev/random  0622 0 0 c 1 8"
+      echo "nod /dev/zero    0622 0 0 c 1 5"
+  } >> "${file_list}"
 
   echo "dir /etc 0755 0 0" >> "${file_list}"
   printf "/usr/lib64\n/lib64\n" > "${initrd_dir}/ld.so.conf" || die
@@ -80,40 +76,45 @@ Kernel_Initramfs_Prepare() {
   fi
 
   #TODO: Get list of directories programmatically
-  echo "dir /bin 0755 0 0" >> "${file_list}"
-  echo "dir /sbin 0755 0 0" >> "${file_list}"
-  echo "dir /usr 0755 0 0" >> "${file_list}"
-  echo "dir /usr/bin 0755 0 0" >> "${file_list}"
-  echo "dir /usr/sbin 0755 0 0" >> "${file_list}"
-  echo "dir /lib64 0755 0 0" >> "${file_list}"
-  echo "dir /usr/lib64 0755 0 0" >> "${file_list}"
+  {
+      echo "dir /bin 0755 0 0"
+      echo "dir /sbin 0755 0 0"
+      echo "dir /usr 0755 0 0"
+      echo "dir /usr/bin 0755 0 0"
+      echo "dir /usr/sbin 0755 0 0"
+      echo "dir /lib64 0755 0 0"
+      echo "dir /usr/lib64 0755 0 0"
+  } >> "${file_list}"
 
   local -a bin_list
   bin_list=(busybox)
 
   #Only include ZFS binaries if they exist
-  if which zfs; then
+  if which zfs 2> /dev/null; then
     bin_list+=(zfs zpool mount.zfs)
   fi
 
   Kernel_Initramfs_CollectLibs bin_list bin_list || die
 
-  for f in "${bin_list[@]}"; do
-    echo "file ${f} ${f} 0755 0 0" >> "${file_list}"
-  done
+  {
+      for f in "${bin_list[@]}"; do
+          echo "file ${f} ${f} 0755 0 0"
+      done
 
-  echo "slink /bin/sh $(which busybox) 0755 0 0" >> "${file_list}"
+      echo "slink /bin/sh $(which busybox) 0755 0 0"
 
-  echo "file /init /usr/share/initramfs.init 0755 0 0" >> "${file_list}"
+      echo "file /init /usr/share/initramfs.init 0755 0 0"
 
+      echo "dir /usr/share 0755 0 0"
+      echo "dir /usr/share/keymaps 0755 0 0"
+  } >> "${file_list}"
 
-  #TODO: Find true kb layout
-#   echo "dir /usr/share 0755 0 0" >> "${file_list}"
-#   echo "dir /usr/share/keymaps 0755 0 0" >> "${file_list}"
-#   echo "dir /usr/share/keymaps/i386 0755 0 0" >> "${file_list}"
-#   echo "dir /usr/share/keymaps/i386/qwertz 0755 0 0" >> "${file_list}"
-  loadkeys -b "/usr/share/keymaps/i386/qwertz/de-latin1.map.gz" \
-    > "${initrd_dir}/default.bmap" || die
+  local keymap
+  keymap=$(grep -Po 'keymap="\K[^"]*' /etc/conf.d/keymaps)
+  keymap=${keymap#"keymap="}
+
+  einfo "Copying keymap '${keymap}' to initramfs"
+  loadkeys -b "${keymap}" > "${initrd_dir}/default.bmap" || die
   echo "file /usr/share/keymaps/default.bmap ${initrd_dir}/default.bmap 0644 0 0" >> "${file_list}"
 
   einfo "Initramfs will be generated with the following structure:"
@@ -131,10 +132,10 @@ Kernel_Initramfs_Postinst() {
   elog "===================================="
   elog "This kernel has a builtin initramfs."
   elog "Currently additionally to filesystems supported by the kernel"
-  elog "it will allow to bot via ZFS."
+  elog "it will allow to boot via ZFS."
   elog "To do so, add \"root=ZFS=<filesystem>\" to your kernel cmdline."
-  elog "Also Booting a virtual-machine via 9P is supported."
-  elog "To do so, add \"root=9P=<tag>\" to your kernel cmdline."
+  elog "Also Booting a virtual-machine via 9P/virtiofs is supported."
+  elog "To do so, add \"root=9P=<tag>\" or \"root=virtio=<tag>\" to your kernel cmdline."
 }
 
 if Kernel_IsOneOf gentoo-kernel vanilla-kernel; then
