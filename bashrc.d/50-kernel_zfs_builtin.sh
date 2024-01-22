@@ -46,7 +46,7 @@ Kernel_ZfsBuiltin_Configure() {
 
 Kernel_ZfsBuiltin_Postinst() {
   elog "===================================="
-  elog "This kernel was installed with builtin ZFS sources."
+  elog "This kernel was installed with builtin ZFS ${ZFS_VERSION}."
 }
 
 if Kernel_IsOneOf gentoo-sources gentoo-kernel vanilla-sources vanilla-kernel; then
