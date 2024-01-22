@@ -16,6 +16,6 @@ Kernel_NullInstall_Install() {
   elog "===================================="
 }
 
-if Kernel_IsOneOf installkernel-gentoo; then
+if Kernel_IsOneOf installkernel; then
   BashrcdPhase install Kernel_NullInstall_Install
 fi
