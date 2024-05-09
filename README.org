@@ -1,0 +1,10 @@
+* portage-bashrc-martius
+** Current Functionality
+Most functionality is now removed since [[https://github.com/projg2/installkernel-gentoo][installkernel gentoo]] and the [[https://wiki.gentoo.org/wiki/Project:Distribution_Kernel][dist-kernel]] ebuilds have been improved massively with better dracut, bootloader and EFI support. Because of this It's not worth it to keep the minimal initramfs generator, builtin zfs and EFI-stub features working anymore and the features have been removed.
+
+Remaining features are:
++ ~70-kernel_uninstall.sh~ to remove kernels in /boot and the /lib/modules directory when a kernel is unmerged,
++ ~80-kernel_config~ to generate a make.sh script in the package directory during the configure ebuild step and
++ ~80-kernel_symlink~ to symlink the most recent kernel and initramfs in /boot, which is useful for qemu direct kernel boot for example
+
+In the future I plan on adding a way to add a way to generate a kernel-config from hierarchically composable, dependency aware config snippets in custom portage profiles.
